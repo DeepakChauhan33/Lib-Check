@@ -27,7 +27,7 @@ app.use(express.urlencoded({ extended: true }));
 
 
 // ==================== Routes Imports ====================
-
+const userRoutes = require("./routes/userRoutes")
 
 
 
@@ -53,7 +53,7 @@ app.get('/', (req, res) => {
 
 
 // Auth Routes
-// app.use('/user', authRoutes);
+app.use('/user', userRoutes);
 
 
 
