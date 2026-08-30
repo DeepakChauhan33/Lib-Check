@@ -28,8 +28,7 @@ const registerUser = async ({ name, email, password }) => {
   return {
     id: user._id,
     name: user.name,
-    emai: user.email,
-    password: user.password
+    email: user.email,
   }
 
 }
@@ -83,7 +82,7 @@ const loginUser = async ({ email, password }) => {
 
 const getLoginUser = async ({ userId }) => {
 
-  const user = await User.findById(userId ).select("-password");
+  const user = await User.findById(userId).select("-password");
 
   if (!user) {
     throw new Error("User not found");

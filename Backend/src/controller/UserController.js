@@ -31,26 +31,24 @@ const register = async (req, res) => {
 
 // Login user
 const login = async (req, res) => {
-
   try {
+    const result = await loginUser(req.body);
 
-    const user = await loginUser(req.body);
-
-    return res.status(201).json({
+    return res.status(200).json({
       success: true,
       message: "User login successfully",
-      user,
+      token: result.token,
+      user: result.user,
     });
 
   } catch (error) {
-
     return res.status(400).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
-
   }
-}
+};
+
 
 
 

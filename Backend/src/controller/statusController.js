@@ -1,27 +1,34 @@
+const { getIO } = require("../config/socket");
 
 const { createReport, getCurrentStatus, getAllReports } = require("../services/statusService");
 
 
 
 const createStatus = async (req, res) => {
-
   try {
+    const report = await createReport(
+      req.body,
+      req.user.userId
+    );
 
-    const report = await createReport(req.body, req.user.userId);
+    // Notify all connected users about the new report
+    const io = getIO();
+
+    io.emit("reportCreated", report);
 
     return res.status(201).json({
       success: true,
-      message: "report submitted successfully",
-      report
-    })
+      message: "Report submitted successfully",
+      report,
+    });
 
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.message
-    })
+      message: error.message,
+    });
   }
-}
+};
 
 
 
