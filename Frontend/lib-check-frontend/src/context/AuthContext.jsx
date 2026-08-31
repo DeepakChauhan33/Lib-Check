@@ -16,9 +16,10 @@ function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const token = localStorage.getItem("token");
+  const isAuthenticated = Boolean(user);
 
-  const isAuthenticated = Boolean(token && user);
+
+  // Check existing login when application starts
 
   useEffect(() => {
     const checkUser = async () => {
@@ -46,11 +47,17 @@ function AuthProvider({ children }) {
     checkUser();
   }, []);
 
+
+  // Login
+
   const login = (userData, token) => {
     localStorage.setItem("token", token);
 
     setUser(userData);
   };
+
+
+  // Logout
 
   const logout = async () => {
     const savedToken = localStorage.getItem("token");
@@ -67,6 +74,7 @@ function AuthProvider({ children }) {
     }
   };
 
+
   return (
     <AuthContext.Provider
       value={{
@@ -82,8 +90,10 @@ function AuthProvider({ children }) {
   );
 }
 
+
 export function useAuth() {
   return useContext(AuthContext);
 }
+
 
 export default AuthProvider;

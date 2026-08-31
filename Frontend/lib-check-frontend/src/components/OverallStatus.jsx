@@ -58,20 +58,20 @@ function OverallStatus({ rating, lastUpdated }) {
         </div>
 
         <div className="sm:text-right">
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-600 ">
             Overall rating
           </p>
 
           <p className="mt-1 text-2xl font-semibold text-slate-900">
             {rating}
-            <span className="text-sm font-normal text-slate-400">
+            <span className="text-sm font-normal text-slate-600 ">
               {" "}
               / 5
             </span>
           </p>
 
           {lastUpdated && (
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-xs text-slate-600 ">
               {lastUpdated}
             </p>
           )}

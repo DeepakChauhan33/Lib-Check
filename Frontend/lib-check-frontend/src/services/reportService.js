@@ -1,42 +1,92 @@
-const API_URL = "http://localhost:8000";
+const API_URL = import.meta.env.VITE_API_URL;
 
-export async function getReports() {
-  const token = localStorage.getItem("token");
 
-  const response = await fetch(`${API_URL}/report`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-  });
+async function getResponseData(response) {
+  const contentType = response.headers.get("content-type");
 
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to fetch reports");
+  if (contentType && contentType.includes("application/json")) {
+    return await response.json();
   }
 
-  return data;
+  return {};
 }
 
-export async function createReport(ratings) {
-  const token = localStorage.getItem("token");
 
-  const response = await fetch(`${API_URL}/report`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(ratings),
-  });
+// Get all reports
 
-  const data = await response.json();
+export async function getReports() {
+  try {
+    const token = localStorage.getItem("token");
 
-  if (!response.ok) {
-    throw new Error(data.message || "Failed to submit report");
+    if (!token) {
+      throw new Error("You are not logged in.");
+    }
+
+    const response = await fetch(`${API_URL}/report`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await getResponseData(response);
+
+    if (!response.ok) {
+      throw new Error(
+        data.message || "Failed to fetch reports"
+      );
+    }
+
+    return data;
+
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error(
+        "Unable to connect to the server. Please try again."
+      );
+    }
+
+    throw error;
   }
+}
 
-  return data;
+
+// Create a new report
+
+export async function createReport(ratings) {
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      throw new Error("You are not logged in.");
+    }
+
+    const response = await fetch(`${API_URL}/report`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(ratings),
+    });
+
+    const data = await getResponseData(response);
+
+    if (!response.ok) {
+      throw new Error(
+        data.message || "Failed to submit report"
+      );
+    }
+
+    return data;
+
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error(
+        "Unable to connect to the server. Please try again."
+      );
+    }
+
+    throw error;
+  }
 }

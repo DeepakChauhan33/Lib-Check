@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-
+import socket from "../services/socket";
 
 import { getReports } from "../services/reportService";
 
@@ -17,7 +17,11 @@ import OverallRating from "../components/OverallRating";
 function Dashboard() {
 
   const [reports, setReports] = useState([]);
+
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+
   const [error, setError] = useState("");
 
   const [isRateModalOpen, setIsRateModalOpen] = useState(false);
@@ -64,9 +68,14 @@ function Dashboard() {
 
 
 
-  const fetchReports = async () => {
+  const fetchReports = async (isBackgroundRefresh = false) => {
     try {
-      setIsLoading(true);
+      if (isBackgroundRefresh) {
+        setIsRefreshing(true);
+      } else {
+        setIsLoading(true);
+      }
+
       setError("");
 
       const data = await getReports();
@@ -77,12 +86,29 @@ function Dashboard() {
 
       setError(error.message);
     } finally {
-      setIsLoading(false);
+      if (isBackgroundRefresh) {
+        setIsRefreshing(false);
+      } else {
+        setIsLoading(false);
+      }
     }
   };
 
+
   useEffect(() => {
     fetchReports();
+
+    const handleReportCreated = (report) => {
+      console.log("New report received:", report);
+
+      fetchReports(true);
+    };
+
+    socket.on("reportCreated", handleReportCreated);
+
+    return () => {
+      socket.off("reportCreated", handleReportCreated);
+    };
   }, []);
 
 
@@ -119,6 +145,10 @@ function Dashboard() {
   const getStatus = (rating) => {
     const value = Number(rating);
 
+    if (value === 0) {
+      return "No Data";
+    }
+
     if (value >= 4.5) {
       return "Excellent";
     }
@@ -133,6 +163,74 @@ function Dashboard() {
 
     return "Poor";
   };
+
+
+
+
+  const getLastUpdated = () => {
+    if (reports.length === 0) {
+      return "No reports yet";
+    }
+
+    const latestReport = reports.reduce((latest, report) => {
+      if (!latest) {
+        return report;
+      }
+
+      return new Date(report.createdAt) > new Date(latest.createdAt)
+        ? report
+        : latest;
+    }, null);
+
+    return formatTimeAgo(latestReport.createdAt);
+  };
+
+
+
+
+
+  const formatTimeAgo = (date) => {
+    const now = new Date();
+    const reportDate = new Date(date);
+
+    const differenceInSeconds = Math.floor(
+      (now - reportDate) / 1000
+    );
+
+    if (differenceInSeconds < 60) {
+      return "Updated just now";
+    }
+
+    const differenceInMinutes = Math.floor(
+      differenceInSeconds / 60
+    );
+
+    if (differenceInMinutes < 60) {
+      return `Updated ${differenceInMinutes} ${differenceInMinutes === 1 ? "minute" : "minutes"
+        } ago`;
+    }
+
+    const differenceInHours = Math.floor(
+      differenceInMinutes / 60
+    );
+
+    if (differenceInHours < 24) {
+      return `Updated ${differenceInHours} ${differenceInHours === 1 ? "hour" : "hours"
+        } ago`;
+    }
+
+    const differenceInDays = Math.floor(
+      differenceInHours / 24
+    );
+
+    return `Updated ${differenceInDays} ${differenceInDays === 1 ? "day" : "days"
+      } ago`;
+  };
+
+
+
+
+
 
 
 
@@ -175,9 +273,11 @@ function Dashboard() {
             Library Status
           </h1>
 
-          <p className="mt-1 text-sm text-slate-500">
-            Check the current condition before you go.
-          </p>
+          {isRefreshing && (
+            <p className="mt-1 text-xs text-slate-400">
+              Updating...
+            </p>
+          )}
         </div>
 
         <button
@@ -192,15 +292,15 @@ function Dashboard() {
 
 
       {/* Overall Status */}
-      <div className="mt-6">
+      <div className="mt-6 rounded-md">
         <OverallStatus
           rating={Number(overallRating)}
-          lastUpdated="Just now"
+          lastUpdated={getLastUpdated()}
         />
       </div>
 
       {/* Status Cards */}
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
 
         <StatusCard
           name="Wi-Fi"

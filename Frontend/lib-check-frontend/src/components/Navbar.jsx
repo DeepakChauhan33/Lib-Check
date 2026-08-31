@@ -12,6 +12,8 @@ function Navbar() {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
+    setIsMenuOpen(false);
+
     await logout();
 
     navigate("/login");
@@ -19,7 +21,7 @@ function Navbar() {
 
   return (
     <header className="border-b border-slate-200 bg-white">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-16 w-full items-center justify-between px-4 sm:px-6 lg:px-8">
 
         {/* Logo */}
         <Link
@@ -33,14 +35,14 @@ function Navbar() {
         <nav className="hidden items-center gap-6 md:flex">
           <Link
             to="/"
-            className="text-sm font-medium text-slate-700 hover:text-blue-600"
+            className="text-md font-bold text-slate-700 hover:text-blue-600 border-b-2 border-transparent transition-all hover:border-blue-600 duration-300 ease-in-out  "
           >
             Dashboard
           </Link>
 
           <Link
             to="/history"
-            className="text-sm font-medium text-slate-700 hover:text-blue-600"
+            className="text-md font-bold text-slate-700 hover:text-blue-600 border-b-2 border-transparent transition-all hover:border-blue-600 duration-300 ease-in-out "
           >
             History
           </Link>
@@ -59,7 +61,7 @@ function Navbar() {
 
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium border text-slate-600 transition-all hover:bg-slate-100 hover:text-slate-900 hover:translate-x-1.5 duration-300 ease-linear delay-150"
             >
               <LogOut size={16} />
               Logout

@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import MainLayout from "../layout/MainLayout";
 import { getReports } from "../services/reportService";
 
 function History() {
   const [reports, setReports] = useState([]);
+  const [filter, setFilter] = useState("all");
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -28,6 +30,39 @@ function History() {
 
     fetchHistory();
   }, []);
+
+  const sortedReports = useMemo(() => {
+    return [...reports].sort(
+      (a, b) =>
+        new Date(b.createdAt) - new Date(a.createdAt)
+    );
+  }, [reports]);
+
+  const filteredReports = useMemo(() => {
+    if (filter === "all") {
+      return sortedReports;
+    }
+
+    return sortedReports.filter((report) => {
+      const rating = calculateReportRating(report);
+
+      if (filter === "excellent") {
+        return rating >= 4.5;
+      }
+
+      if (filter === "good") {
+        return rating >= 3.5 && rating < 4.5;
+      }
+
+      if (filter === "average") {
+        return rating >= 2.5 && rating < 3.5;
+      }
+
+      return rating < 2.5;
+    });
+  }, [sortedReports, filter]);
+
+  const overallRating = calculateOverallRating(reports);
 
   if (isLoading) {
     return (
@@ -66,20 +101,77 @@ function History() {
         </p>
       </div>
 
-      {/* Empty State */}
-      {reports.length === 0 ? (
+      {/* Summary */}
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+        <SummaryCard
+          label="Total Reports"
+          value={reports.length}
+        />
+
+        <SummaryCard
+          label="Average Rating"
+          value={`${overallRating} / 5`}
+        />
+
+      </div>
+
+      {/* Filter */}
+      {reports.length > 0 && (
+        <div className="mt-6 flex flex-wrap gap-2">
+
+          <FilterButton
+            label="All"
+            value="all"
+            activeFilter={filter}
+            setFilter={setFilter}
+          />
+
+          <FilterButton
+            label="Excellent"
+            value="excellent"
+            activeFilter={filter}
+            setFilter={setFilter}
+          />
+
+          <FilterButton
+            label="Good"
+            value="good"
+            activeFilter={filter}
+            setFilter={setFilter}
+          />
+
+          <FilterButton
+            label="Average"
+            value="average"
+            activeFilter={filter}
+            setFilter={setFilter}
+          />
+
+          <FilterButton
+            label="Poor"
+            value="poor"
+            activeFilter={filter}
+            setFilter={setFilter}
+          />
+
+        </div>
+      )}
+
+      {/* Reports */}
+      {filteredReports.length === 0 ? (
         <div className="mt-6 rounded-2xl border border-slate-200 bg-white px-5 py-12 text-center shadow-sm">
           <h2 className="text-sm font-semibold text-slate-800">
-            No reports yet
+            No reports found
           </h2>
 
           <p className="mt-1 text-sm text-slate-500">
-            Library ratings submitted by members will appear here.
+            Try changing the filter.
           </p>
         </div>
       ) : (
         <div className="mt-6 space-y-4">
-          {reports.map((report) => (
+          {filteredReports.map((report) => (
             <ReportCard
               key={report._id}
               report={report}
@@ -91,13 +183,50 @@ function History() {
   );
 }
 
+
+function SummaryCard({ label, value }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <p className="text-xs font-medium text-slate-400">
+        {label}
+      </p>
+
+      <p className="mt-2 text-2xl font-semibold text-slate-900">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+
+function FilterButton({
+  label,
+  value,
+  activeFilter,
+  setFilter,
+}) {
+  const isActive = activeFilter === value;
+
+  return (
+    <button
+      onClick={() => setFilter(value)}
+      className={`rounded-lg px-3 py-2 text-sm font-medium transition ${isActive
+          ? "bg-slate-900 text-white"
+          : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+        }`}
+    >
+      {label}
+    </button>
+  );
+}
+
+
 function ReportCard({ report }) {
   const overallRating = calculateReportRating(report);
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
 
-      {/* Report Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 
         <div>
@@ -126,7 +255,6 @@ function ReportCard({ report }) {
 
       </div>
 
-      {/* Ratings */}
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
 
         <RatingItem
@@ -159,6 +287,7 @@ function ReportCard({ report }) {
   );
 }
 
+
 function RatingItem({ label, value }) {
   return (
     <div className="rounded-lg bg-slate-50 px-3 py-2.5">
@@ -173,6 +302,7 @@ function RatingItem({ label, value }) {
   );
 }
 
+
 function calculateReportRating(report) {
   const total =
     Number(report.wifi || 0) +
@@ -181,8 +311,22 @@ function calculateReportRating(report) {
     Number(report.electricity || 0) +
     Number(report.rain || 0);
 
-  return (total / 5).toFixed(1);
+  return Number((total / 5).toFixed(1));
 }
+
+
+function calculateOverallRating(reports) {
+  if (reports.length === 0) {
+    return "0.0";
+  }
+
+  const total = reports.reduce((sum, report) => {
+    return sum + calculateReportRating(report);
+  }, 0);
+
+  return (total / reports.length).toFixed(1);
+}
+
 
 function formatDate(date) {
   if (!date) {
@@ -191,5 +335,6 @@ function formatDate(date) {
 
   return new Date(date).toLocaleString();
 }
+
 
 export default History;

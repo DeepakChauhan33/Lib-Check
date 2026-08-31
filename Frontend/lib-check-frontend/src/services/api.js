@@ -1,78 +1,150 @@
-const API_URL = "http://localhost:8000";
+const API_URL = import.meta.env.VITE_API_URL;
+
+async function getResponseData(response) {
+  const contentType = response.headers.get("content-type");
+
+  if (contentType && contentType.includes("application/json")) {
+    return await response.json();
+  }
+
+  return {};
+}
+
+
+// Login user
 
 export async function loginUser(email, password) {
-  const response = await fetch(`${API_URL}/user/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      email,
-      password,
-    }),
-  });
+  try {
+    const response = await fetch(`${API_URL}/user/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        password,
+      }),
+    });
 
-  const data = await response.json();
+    const data = await getResponseData(response);
 
-  if (!response.ok) {
-    throw new Error(data.message || "Login failed");
+    if (!response.ok) {
+      throw new Error(data.message || "Login failed");
+    }
+
+    return data;
+
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error(
+        "Unable to connect to the server. Please try again."
+      );
+    }
+
+    throw error;
   }
-
-  return data;
 }
+
+
+// Register user
 
 export async function registerUser(name, email, password) {
-  const response = await fetch(`${API_URL}/user/register`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      name,
-      email,
-      password,
-    }),
-  });
+  try {
+    const response = await fetch(`${API_URL}/user/register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name,
+        email,
+        password,
+      }),
+    });
 
-  const data = await response.json();
+    const data = await getResponseData(response);
 
-  if (!response.ok) {
-    throw new Error(data.message || "Registration failed");
+    if (!response.ok) {
+      throw new Error(
+        data.message || "Registration failed"
+      );
+    }
+
+    return data;
+
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error(
+        "Unable to connect to the server. Please try again."
+      );
+    }
+
+    throw error;
   }
-
-  return data;
 }
+
+
+// Get currently logged-in user
 
 export async function getCurrentUser(token) {
-  const response = await fetch(`${API_URL}/user/me`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  try {
+    const response = await fetch(`${API_URL}/user/me`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-  const data = await response.json();
+    const data = await getResponseData(response);
 
-  if (!response.ok) {
-    throw new Error(data.message || "Unable to get user");
+    if (!response.ok) {
+      throw new Error(
+        data.message || "Unable to get user"
+      );
+    }
+
+    return data;
+
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error(
+        "Unable to connect to the server. Please try again."
+      );
+    }
+
+    throw error;
   }
-
-  return data;
 }
 
+
+// Logout user
+
 export async function logoutUser(token) {
-  const response = await fetch(`${API_URL}/user/logout`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  try {
+    const response = await fetch(`${API_URL}/user/logout`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-  const data = await response.json();
+    const data = await getResponseData(response);
 
-  if (!response.ok) {
-    throw new Error(data.message || "Logout failed");
+    if (!response.ok) {
+      throw new Error(
+        data.message || "Logout failed"
+      );
+    }
+
+    return data;
+
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error(
+        "Unable to connect to the server. Please try again."
+      );
+    }
+
+    throw error;
   }
-
-  return data;
 }

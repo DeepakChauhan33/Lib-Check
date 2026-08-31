@@ -18,7 +18,7 @@ function OverallRating({ rating, totalReports }) {
             {rating}
           </span>
 
-          <span className="text-sm text-slate-400">
+          <span className="text-sm text-slate-800">
             / 5
           </span>
         </div>
